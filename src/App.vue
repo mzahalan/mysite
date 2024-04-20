@@ -14,6 +14,7 @@ document.title = 'Zahalan.com'
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/mudconnect">MudConnect</RouterLink>
       </nav>
     </div>
   </header>
