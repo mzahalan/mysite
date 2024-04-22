@@ -19,7 +19,7 @@ const router = createRouter({
     },
     {
       path: '/mudconnect',
-      name: 'mudconect',
+      name: 'mudconnect',
       component: () => import('@/views/MudConnectView.vue')
     }
   ]

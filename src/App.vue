@@ -12,25 +12,16 @@ const drawer = ref(false)
 
 document.title = 'Zahalan.com'
 </script>
-
 <template>
-  <v-app>      
-    <v-app-bar
-      image="https://cdn.vuetifyjs.com/images/backgrounds/vbanner.jpg"
-      dark
-      prominent
-      app
-    >
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-app-bar-title>Vuetify</v-app-bar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon="mdi-theme-light-dark" @click="toggleTheme"></v-btn>
-    </v-app-bar>
-    <NavDrawer v-model="drawer"/>
-    <v-main>
-      <router-view/>
+  <v-layout class="rounded rounded-md">
+    <v-app-bar title="Application bar"></v-app-bar>
+
+    <NavDrawer></NavDrawer>
+
+    <v-main class="d-flex align-center justify-center" style="min-height: 300px;">
+      <RouterView></RouterView>
     </v-main>
-  </v-app>
+  </v-layout>
 </template>
 
 <style scoped>

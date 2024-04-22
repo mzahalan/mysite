@@ -5,6 +5,7 @@
         <v-list density="compact">
             <v-list-item><router-link :to="{name: 'home'}">Home</router-link></v-list-item>
             <v-list-item><router-link :to="{name: 'about'}">About</router-link></v-list-item>
+            <v-list-item><router-link :to="{name: 'mudconnect'}">Mud</router-link></v-list-item>
         </v-list>
     </v-navigation-drawer>
 </template>
