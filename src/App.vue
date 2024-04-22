@@ -1,21 +1,25 @@
 <template>
   <v-app>
-    <v-app-bar title="Zahalan.com" prominent app>
+    <v-app-bar title="Zahalan.com">
       <template v-slot:prepend>
         <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       </template>
-      <v-spacer></v-spacer>
-      <v-btn icon="mdi-theme-light-dark" @click="toggleTheme"></v-btn>
+      <template v-slot:append>
+        <v-btn icon="mdi-theme-light-dark" @click="toggleTheme"></v-btn>
+      </template>
     </v-app-bar>
-    <NavDrawer v-model="drawer"></NavDrawer>
+    <v-navigation-drawer v-model="drawer">
+      <v-list-item><router-link :to="{ name: 'home' }">Home</router-link></v-list-item>
+      <v-list-item><router-link :to="{ name: 'about' }">About</router-link></v-list-item>
+      <v-list-item><router-link :to="{ name: 'mudconnect' }">Mud</router-link></v-list-item>
+    </v-navigation-drawer>
     <v-main>
-      <RouterView></RouterView>
+      <router-view />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import NavDrawer from './components/NavDrawer.vue'
 import { ref } from 'vue'
 import { useTheme } from 'vuetify'
 
