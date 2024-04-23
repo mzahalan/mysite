@@ -1,12 +1,16 @@
 <template>
   <div>
-    <button v-if="!sock" @click="handleClick">Connect!</button>
-    <button v-if="sock" @click="handleClose">Disconnect!</button>
+    <v-btn v-if="!sock" @click="handleClick">Connect!</v-btn>
+    <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
     <span v-if="spinner">Connecting...</span>
   </div>
+  <v-textarea v-model="messages">{{ messages }} </v-textarea>
   <div>
-    <input v-model="message" @keyup.enter="sendMessage" />
-    <button @click="sendMessage">Send</button>
+    <v-text-field v-model="message" @keyup.enter="sendMessage">
+      <template v-slot:append-inner>
+        <button @click="sendMessage">Send</button>
+      </template>
+    </v-text-field>
     <ul>
       <li v-for="msg in messages" :key="msg">{{ msg }}</li>
     </ul>
@@ -25,7 +29,7 @@ const handleClick = () => {
   sock.value = new WebSocket('wss://socket.zahalan.com')
   sock.value.onmessage = (ev) => {
     console.log(ev)
-    messages.value.push(ev.data)
+    messages.value.push(ev.data + '\n')
   }
   console.log(sock.value)
   spinner.value = false
