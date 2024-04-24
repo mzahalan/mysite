@@ -1,6 +1,6 @@
 <template>
-  <v-app>
-    <v-app-bar title="Zahalan.com">
+  <v-app app>
+    <v-app-bar title="Zahalan.com" density="compact">
       <template v-slot:prepend>
         <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       </template>
@@ -14,8 +14,9 @@
       <v-list-item><router-link :to="{ name: 'mudconnect' }">Mud</router-link></v-list-item>
     </v-navigation-drawer>
     <v-main>
-      <router-view />
+      <router-view></router-view>
     </v-main>
+    <v-footer app>Zahalan.com</v-footer>
   </v-app>
 </template>
 

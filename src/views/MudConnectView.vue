@@ -1,24 +1,31 @@
 <template>
-  <div>
-    <v-btn v-if="!sock" @click="handleClick">Connect!</v-btn>
-    <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
-    <span v-if="spinner">Connecting...</span>
-  </div>
-  <v-textarea v-model="messages">{{ messages }} </v-textarea>
-  <div>
-    <v-text-field v-model="message" @keyup.enter="sendMessage">
-      <template v-slot:append-inner>
-        <button @click="sendMessage">Send</button>
+  <v-sheet class="d-flex flex-column fill-height overflow-auto" max-height="90dvh">
+    <div class="shrink">
+      <v-btn v-if="!sock" @click="handleClick">Connect!</v-btn>
+      <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
+      <span v-if="spinner">Connecting...</span>
+    </div>
+    <div id="mudbox" class="overflow-auto flex-grow-1">
+      <template v-for="msg in messages" :key="msg">
+        <pre>
+      {{ msg }}
+    </pre
+        >
+        <br />
       </template>
-    </v-text-field>
-    <ul>
-      <li v-for="msg in messages" :key="msg">{{ msg }}</li>
-    </ul>
-  </div>
+    </div>
+    <div class="shrink">
+      <v-text-field v-model="message" @keyup.enter="sendMessage" class="flex-1-1-100">
+        <template v-slot:append-inner>
+          <button @click="sendMessage"><v-icon>mdi-send</v-icon></button>
+        </template>
+      </v-text-field>
+    </div>
+  </v-sheet>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 const spinner = ref(false)
 const sock = ref(null)
 const messages = ref([])
@@ -28,10 +35,8 @@ const handleClick = () => {
   spinner.value = true
   sock.value = new WebSocket('wss://socket.zahalan.com')
   sock.value.onmessage = (ev) => {
-    console.log(ev)
     messages.value.push(ev.data + '\n')
   }
-  console.log(sock.value)
   spinner.value = false
 }
 
@@ -40,10 +45,22 @@ const handleClose = () => {
   sock.value = ''
 }
 
+watch(
+  () => messages.value,
+  async (msgs) => {
+    nextTick(() => {
+      let mudbox = document.getElementById('mudbox')
+      mudbox.scrollTop = mudbox.scrollHeight
+      console.log('updated scroll')
+    })
+  },
+  { deep: true }
+)
+
 const sendMessage = () => {
   let msg = message.value
   console.log(`Sending Message: ${msg}`)
-  if (msg.trim() !== '' && sock.value) {
+  if (sock.value) {
     sock.value.send(msg)
     message.value = ''
   }
