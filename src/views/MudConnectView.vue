@@ -6,13 +6,7 @@
       <span v-if="spinner">Connecting...</span>
     </div>
     <div id="mudbox" class="overflow-auto flex-grow-1">
-      <template v-for="msg in messages" :key="msg">
-        <pre>
-      {{ msg }}
-    </pre
-        >
-        <br />
-      </template>
+      <div class="content ma-0 pa-0" v-for="msg in messages" :key="msg" v-html="msg"></div>
     </div>
     <div class="shrink">
       <v-text-field v-model="message" @keyup.enter="sendMessage" class="flex-1-1-100">
@@ -51,7 +45,6 @@ watch(
     nextTick(() => {
       let mudbox = document.getElementById('mudbox')
       mudbox.scrollTop = mudbox.scrollHeight
-      console.log('updated scroll')
     })
   },
   { deep: true }
@@ -59,7 +52,6 @@ watch(
 
 const sendMessage = () => {
   let msg = message.value
-  console.log(`Sending Message: ${msg}`)
   if (sock.value) {
     sock.value.send(msg)
     message.value = ''
@@ -67,4 +59,8 @@ const sendMessage = () => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.content {
+  font-family: monospace;
+}
+</style>
