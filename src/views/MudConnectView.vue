@@ -40,6 +40,7 @@ const receiveData = (ev) => {
 const handleClick = () => {
   spinner.value = true
   sock.value = new WebSocket('wss://socket.zahalan.com')
+  //sock.value = new WebSocket('ws://localhost:8081')
   sock.value.onmessage = receiveData
   spinner.value = false
 }
