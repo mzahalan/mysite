@@ -32,13 +32,15 @@ const commandLine = ref(null)
 const messages = ref([])
 const message = ref('')
 
+const receiveData = (ev) => {
+  let msg = JSON.parse(ev.data)
+  messages.value.push(msg.html + '\n')
+}
 
 const handleClick = () => {
   spinner.value = true
   sock.value = new WebSocket('wss://socket.zahalan.com')
-  sock.value.onmessage = (ev) => {
-    messages.value.push(ev.data + '\n')
-  }
+  sock.value.onmessage = receiveData
   spinner.value = false
 }
 
@@ -90,7 +92,10 @@ const sendMessage = () => {
   let msg = message.value
   addHistory(msg)
   if (sock.value) {
-    sock.value.send(msg)
+    let outMsg = {
+      message: msg
+    }
+    sock.value.send(JSON.stringify(outMsg))
     commandLine.value.select()
   }
 }
