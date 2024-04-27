@@ -30,7 +30,9 @@
         <v-btn v-if="!sock" @click="handleClick" type="submit">Connect!</v-btn>
         <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
       </v-toolbar>
-      <span v-if="spinner">Connecting...</span>
+      <v-card class="text-right text-blue-darken-1 mr-1" variant="plain">
+        Socket Status: {{ sockStatus() }}
+      </v-card>
     </div>
     <div id="mudbox" class="overflow-auto flex-grow-1 pl-5">
       <div class="content ma-0 pa-0" v-for="msg in messages" :key="msg" v-html="msg"></div>
@@ -56,7 +58,6 @@
 
 <script setup>
 import { nextTick, ref, watch } from 'vue'
-const spinner = ref(false)
 const sock = ref(null)
 const commandLine = ref(null)
 const messages = ref([])
@@ -64,6 +65,15 @@ const message = ref('')
 const password = ref('')
 const character = ref('')
 const showPW = ref(false)
+
+const sockStatus = () => {
+  if(sock.value == null) {
+    return "Disconnected"
+  }
+
+  const STATES = ['Connecting', 'Open', 'Closing', 'Closed']
+  return STATES[sock.value.readyState]
+}
 
 const sendCharName = () => {
   let outMsg = {
@@ -96,11 +106,9 @@ const receiveData = (ev) => {
 }
 
 const handleClick = () => {
-  spinner.value = true
   sock.value = new WebSocket('wss://socket.zahalan.com')
   //sock.value = new WebSocket('ws://localhost:8081')
   sock.value.onmessage = receiveData
-  spinner.value = false
   nextTick(() => {
       commandLine.value.focus()
     })
@@ -108,7 +116,7 @@ const handleClick = () => {
 
 const handleClose = () => {
   sock.value.close()
-  sock.value = ''
+  sock.value = null
 }
 
 watch(
