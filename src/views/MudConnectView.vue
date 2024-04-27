@@ -3,22 +3,31 @@
     <div class="shrink">
       <v-toolbar>
         <v-toolbar-title>MudConnect</v-toolbar-title>
+
         <v-text-field
           label="Character"
           type="text"
           variant="outlined"
           hide-details
+          density="compact"
           v-model="character"
-        ></v-text-field>
-        
-      <v-text-field
-          label="Password"
-          type="password"
-          variant="outlined"
-          hide-details
-          v-model="password"
-      ></v-text-field>
-        <v-btn v-if="!sock" @click="handleClick">Connect!</v-btn>
+        >
+        </v-text-field>
+        <v-spacer></v-spacer>
+        <v-text-field
+            label="Password"
+            :type="showPW ? 'text' : 'password'"
+            variant="outlined"
+            hide-details
+            density="compact"
+            :append-inner-icon="showPW ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="showPW = !showPW"
+            @keyup.enter="handleClick"
+            v-model="password"
+        >
+        </v-text-field>
+        <v-spacer></v-spacer>
+        <v-btn v-if="!sock" @click="handleClick" type="submit">Connect!</v-btn>
         <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
       </v-toolbar>
       <span v-if="spinner">Connecting...</span>
@@ -34,7 +43,9 @@
           @keyup.arrow-up="handleScroll(-1)"
           @keyup.arrow-down="handleScroll(1)"
           class="flex-1-1-100">
-          <template v-slot:prepend-inner><v-icon>mdi-code-greater-than</v-icon></template>
+        <template v-slot:prepend-inner>
+          <v-icon>mdi-code-greater-than</v-icon>
+        </template>
         <template v-slot:append-inner>
           <button @click="sendMessage"><v-icon>mdi-send</v-icon></button>
         </template>
@@ -52,7 +63,7 @@ const messages = ref([])
 const message = ref('')
 const password = ref('')
 const character = ref('')
-
+const showPW = ref(false)
 
 const sendCharName = () => {
   let outMsg = {
@@ -90,6 +101,9 @@ const handleClick = () => {
   //sock.value = new WebSocket('ws://localhost:8081')
   sock.value.onmessage = receiveData
   spinner.value = false
+  nextTick(() => {
+      commandLine.value.focus()
+    })
 }
 
 const handleClose = () => {
