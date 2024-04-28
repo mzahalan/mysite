@@ -22,25 +22,26 @@
             density="compact"
             :append-inner-icon="showPW ? 'mdi-eye' : 'mdi-eye-off'"
             @click:append-inner="showPW = !showPW"
-            @keyup.enter="handleClick"
+            @keyup.enter="handleConnect"
             v-model="password"
         >
         </v-text-field>
         <v-spacer></v-spacer>
-        <v-btn v-if="!sock" @click="handleClick" type="submit">Connect!</v-btn>
+        <v-btn v-if="!sock" @click="handleConnect" type="submit">Connect!</v-btn>
         <v-btn v-if="sock" @click="handleClose">Disconnect!</v-btn>
       </v-toolbar>
-      <v-card class="text-right text-blue-darken-1 mr-1" variant="plain">
-        Socket Status: {{ sockStatus() }}
+      <v-card v-model="sockStatus" class="text-right text-blue-darken-1 mr-1" variant="plain">
+        Socket Status: {{ sockStatus }}
       </v-card>
     </div>
     <div id="mudbox" class="overflow-auto flex-grow-1 pl-5">
-      <div class="content ma-0 pa-0" v-for="msg in messages" :key="msg" v-html="msg"></div>
+      <div class="content ma-0 pa-0" v-for="msg in messages" v-html="msg"></div>
     </div>
     <div class="shrink">
       <v-text-field 
           ref="commandLine"
           v-model="message" 
+          :type="commandLineType"
           @keyup.enter="sendMessage" 
           @keyup.arrow-up="handleScroll(-1)"
           @keyup.arrow-down="handleScroll(1)"
@@ -59,21 +60,16 @@
 <script setup>
 import { nextTick, ref, watch } from 'vue'
 const sock = ref(null)
+const sockStatus = ref('Disconnected')
 const commandLine = ref(null)
+const commandLineType = ref('text')
 const messages = ref([])
 const message = ref('')
 const password = ref('')
 const character = ref('')
 const showPW = ref(false)
+const sendLogin = ref(false)
 
-const sockStatus = () => {
-  if(sock.value == null) {
-    return "Disconnected"
-  }
-
-  const STATES = ['Connecting', 'Open', 'Closing', 'Closed']
-  return STATES[sock.value.readyState]
-}
 
 const sendCharName = () => {
   let outMsg = {
@@ -95,33 +91,54 @@ const receiveData = (ev) => {
   let msg = JSON.parse(ev.data)
 
   messages.value.push(msg.html + '\n')
-  if(PROMPT_PATTERN_CHARACTER.test(msg.text.trim())) {
-    sendCharName()
-    messages.value.push(`<div class='text-blue-darken-1'>${character.value}</div>`)
-  } else if (PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
-    sendPassword()
-    messages.value.push("<div class='text-blue-darken-1'>PASSWORD SENT</div>")
-  }
 
+  if(sendLogin.value) {
+    if(PROMPT_PATTERN_CHARACTER.test(msg.text.trim())) {
+      sendCharName()
+      messages.value.push(`<div class='text-blue-darken-1'>${character.value}</div>`)
+    } else if (PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
+      sendPassword()
+      messages.value.push(`<div class='text-blue-darken-1'>${'*'.repeat(password.value.length)}</div>`)
+    }
+  } else if(PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
+    commandLineType.value = 'password'
+    message.value = ''
+  }
 }
 
-const handleClick = () => {
+const connect = () => {
   sock.value = new WebSocket('wss://socket.zahalan.com')
   //sock.value = new WebSocket('ws://localhost:8081')
+
   sock.value.onmessage = receiveData
+  sock.value.onclose = () => {
+    sockStatus.value = 'Closed'
+    sock.value = null
+  }
+  sock.value.onopen = () => {
+    sockStatus.value = 'Connected'
+  }
+}
+
+const handleConnect = () => {
+  connect()
+  sendLogin.value = password.value != '' && character.value != ''
+
   nextTick(() => {
-      commandLine.value.focus()
-    })
+    commandLine.value.focus()
+  })
 }
 
 const handleClose = () => {
   sock.value.close()
-  sock.value = null
 }
 
 watch(
   () => messages.value,
   async (msgs) => {
+    if(msgs.length > MAX_MESSAGE_HISTORY) {
+      msgs.shift()
+    }
     nextTick(() => {
       let mudbox = document.getElementById('mudbox')
       mudbox.scrollTop = mudbox.scrollHeight
@@ -131,7 +148,8 @@ watch(
 )
 
 const history = []
-const MAX_HISTORY = 50
+const MAX_COMMAND_HISTORY = 50
+const MAX_MESSAGE_HISTORY = 25
 let historyPointer = -1
 
 const handleScroll = (inc) => {
@@ -149,19 +167,33 @@ const handleScroll = (inc) => {
   }
 }
 
+const wrapCommand = (msg,type) => {
+  return `<${type} class='text-blue-darken-1'>${msg}</${type}`
+}
+
 const addHistory = (msg) => {
   if(msg.trim() != '') {
     history.push(msg)
-    if(history.length > MAX_HISTORY) {
+    if(history.length > MAX_COMMAND_HISTORY) {
       history.shift()
     }
     historyPointer = history.length - 1
   }
+
+  let newMessage = messages.value[messages.value.length-1].concat(wrapCommand(msg))
+  messages.value[messages.value.length-1] = newMessage
 }
 
 const sendMessage = () => {
   let msg = message.value
-  addHistory(msg)
+  
+  if(commandLineType.value == 'password') {
+    commandLineType.value = 'text'
+    message.value = ''
+  } else {
+    addHistory(msg)
+  }
+
   if (sock.value) {
     let outMsg = {
       message: msg
