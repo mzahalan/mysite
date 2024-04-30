@@ -15,15 +15,15 @@
         </v-text-field>
         <v-spacer></v-spacer>
         <v-text-field
-            label="Password"
-            :type="showPW ? 'text' : 'password'"
-            variant="outlined"
-            hide-details
-            density="compact"
-            :append-inner-icon="showPW ? 'mdi-eye' : 'mdi-eye-off'"
-            @click:append-inner="showPW = !showPW"
-            @keyup.enter="handleConnect"
-            v-model="password"
+          label="Password"
+          :type="showPW ? 'text' : 'password'"
+          variant="outlined"
+          hide-details
+          density="compact"
+          :append-inner-icon="showPW ? 'mdi-eye' : 'mdi-eye-off'"
+          @click:append-inner="showPW = !showPW"
+          @keyup.enter="handleConnect"
+          v-model="password"
         >
         </v-text-field>
         <v-spacer></v-spacer>
@@ -38,14 +38,15 @@
       <div class="content ma-0 pa-0" v-for="msg in messages" v-html="msg"></div>
     </div>
     <div class="shrink">
-      <v-text-field 
-          ref="commandLine"
-          v-model="message" 
-          :type="commandLineType"
-          @keyup.enter="sendMessage" 
-          @keyup.arrow-up="handleScroll(-1)"
-          @keyup.arrow-down="handleScroll(1)"
-          class="flex-1-1-100">
+      <v-text-field
+        ref="commandLine"
+        v-model="message"
+        :type="commandLineType"
+        @keyup.enter="sendMessage"
+        @keyup.arrow-up="handleScroll(-1)"
+        @keyup.arrow-down="handleScroll(1)"
+        class="flex-1-1-100"
+      >
         <template v-slot:prepend-inner>
           <v-icon>mdi-code-greater-than</v-icon>
         </template>
@@ -69,7 +70,6 @@ const password = ref('')
 const character = ref('')
 const showPW = ref(false)
 const sendLogin = ref(false)
-
 
 const commandMessageBuilder = (message) => {
   return JSON.stringify({
@@ -99,30 +99,31 @@ const receiveData = (ev) => {
   let msg = JSON.parse(ev.data)
 
   // We can ignore these for now
-  if(msg.type == 'control') {
+  if (msg.type == 'control') {
     return
   }
 
   messages.value.push(msg.html + '\n')
 
-  if(sendLogin.value) {
-    if(PROMPT_PATTERN_CHARACTER.test(msg.text.trim())) {
+  if (sendLogin.value) {
+    if (PROMPT_PATTERN_CHARACTER.test(msg.text.trim())) {
       sendCharName()
       messages.value.push(`<div class='text-blue-darken-1'>${character.value}</div>`)
     } else if (PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
       sendPassword()
-      messages.value.push(`<div class='text-blue-darken-1'>${'*'.repeat(password.value.length)}</div>`)
+      messages.value.push(
+        `<div class='text-blue-darken-1'>${'*'.repeat(password.value.length)}</div>`
+      )
     }
-  } else if(PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
+  } else if (PROMPT_PATTERN_PASSWORD.test(msg.text.trim())) {
     commandLineType.value = 'password'
     message.value = ''
   }
 }
 
 const connect = () => {
-  
-  //sock.value = new WebSocket('wss://socket.zahalan.com')
-  sock.value = new WebSocket('ws://localhost:9181')
+  sock.value = new WebSocket('wss://socket.zahalan.com')
+  //sock.value = new WebSocket('ws://localhost:9181')
 
   sock.value.onmessage = receiveData
   sock.value.onclose = () => {
@@ -132,9 +133,9 @@ const connect = () => {
   sock.value.onopen = () => {
     sockStatus.value = 'Connected'
     console.log('connected')
-    
+
     let clockId = setInterval(() => {
-      if(sock.value && sock.value.readyState == 1) {
+      if (sock.value && sock.value.readyState == 1) {
         sock.value.send(controlMessageBuilder('ping'))
       } else {
         clearInterval(clockId)
@@ -159,7 +160,7 @@ const handleClose = () => {
 watch(
   () => messages.value,
   async (msgs) => {
-    if(msgs.length > MAX_MESSAGE_HISTORY) {
+    if (msgs.length > MAX_MESSAGE_HISTORY) {
       msgs.shift()
     }
     nextTick(() => {
@@ -176,11 +177,11 @@ const MAX_MESSAGE_HISTORY = 25
 let historyPointer = -1
 
 const handleScroll = (inc) => {
-  if(history.length > 0) {
+  if (history.length > 0) {
     historyPointer = (historyPointer + inc) % history.length
-    
-    if(historyPointer < 0) {
-      historyPointer = history.length -1
+
+    if (historyPointer < 0) {
+      historyPointer = history.length - 1
     }
 
     message.value = history[historyPointer]
@@ -190,27 +191,27 @@ const handleScroll = (inc) => {
   }
 }
 
-const wrapCommand = (msg,type) => {
+const wrapCommand = (msg, type) => {
   return `<${type} class='text-blue-darken-1'>${msg}</${type}`
 }
 
 const addHistory = (msg) => {
-  if(msg.trim() != '') {
+  if (msg.trim() != '') {
     history.push(msg)
-    if(history.length > MAX_COMMAND_HISTORY) {
+    if (history.length > MAX_COMMAND_HISTORY) {
       history.shift()
     }
     historyPointer = history.length - 1
   }
 
-  let newMessage = messages.value[messages.value.length-1].concat(wrapCommand(msg))
-  messages.value[messages.value.length-1] = newMessage
+  let newMessage = messages.value[messages.value.length - 1].concat(wrapCommand(msg))
+  messages.value[messages.value.length - 1] = newMessage
 }
 
 const sendMessage = () => {
   let msg = message.value
-  
-  if(commandLineType.value == 'password') {
+
+  if (commandLineType.value == 'password') {
     commandLineType.value = 'text'
     message.value = ''
   } else {
