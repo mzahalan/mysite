@@ -71,24 +71,37 @@ const showPW = ref(false)
 const sendLogin = ref(false)
 
 
+const commandMessageBuilder = (message) => {
+  return JSON.stringify({
+    type: 'command',
+    message: message
+  })
+}
+
+const controlMessageBuilder = (message) => {
+  return JSON.stringify({
+    type: 'control',
+    message: message
+  })
+}
+
 const sendCharName = () => {
-  let outMsg = {
-      message: character.value
-  }
-  sock.value.send(JSON.stringify(outMsg))
+  sock.value.send(commandMessageBuilder(character.value))
 }
 
 const sendPassword = () => {
-  let outMsg = {
-      message: password.value
-  }
-  sock.value.send(JSON.stringify(outMsg))
+  sock.value.send(commandMessageBuilder(password.value))
 }
 
 const receiveData = (ev) => {
   const PROMPT_PATTERN_CHARACTER = /By what name do you wish to be known\?$/
   const PROMPT_PATTERN_PASSWORD = /^Password:$/
   let msg = JSON.parse(ev.data)
+
+  // We can ignore these for now
+  if(msg.type == 'control') {
+    return
+  }
 
   messages.value.push(msg.html + '\n')
 
@@ -107,8 +120,9 @@ const receiveData = (ev) => {
 }
 
 const connect = () => {
-  sock.value = new WebSocket('wss://socket.zahalan.com')
-  //sock.value = new WebSocket('ws://localhost:8081')
+  
+  //sock.value = new WebSocket('wss://socket.zahalan.com')
+  sock.value = new WebSocket('ws://localhost:9181')
 
   sock.value.onmessage = receiveData
   sock.value.onclose = () => {
@@ -117,6 +131,15 @@ const connect = () => {
   }
   sock.value.onopen = () => {
     sockStatus.value = 'Connected'
+    console.log('connected')
+    
+    let clockId = setInterval(() => {
+      if(sock.value && sock.value.readyState == 1) {
+        sock.value.send(controlMessageBuilder('ping'))
+      } else {
+        clearInterval(clockId)
+      }
+    }, 3000)
   }
 }
 
@@ -195,10 +218,7 @@ const sendMessage = () => {
   }
 
   if (sock.value) {
-    let outMsg = {
-      message: msg
-    }
-    sock.value.send(JSON.stringify(outMsg))
+    sock.value.send(commandMessageBuilder(msg))
     commandLine.value.select()
   }
 }
